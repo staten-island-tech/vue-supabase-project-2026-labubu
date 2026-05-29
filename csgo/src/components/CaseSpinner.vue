@@ -10,7 +10,7 @@
       />
       <div>
         <h1>Prisma Case</h1>
-        <p class="subtitle">17 skins · 4 knife pools · Released March 13, 2019</p>
+        <p class="subtitle">17 skins · 4 knife types · Released March 13, 2019</p>
       </div>
     </div>
 
