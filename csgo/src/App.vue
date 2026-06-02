@@ -1,6 +1,5 @@
 <script setup>
-  import { ref, onMounted } from 'vue'
-  import { supabase } from '../utils/supabase'
+import { ref, onMounted } from 'vue'
 import CaseSpinner from './components/CaseSpinner.vue'
   
   const todos = ref([])
