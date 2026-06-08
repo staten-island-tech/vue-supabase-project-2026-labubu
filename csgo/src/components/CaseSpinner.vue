@@ -139,7 +139,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import gsap from 'gsap'
 
-// ─── Image base ──────────────────────────────────────────────────────────────
+
 const IMG = {
   // Covert
   'm4a4_emperor':       'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9tNGExX2dzX200YTRfZW1wZXJvcl9saWdodC44OWE1NjU0YTc2NTExMGFlNTY5N2U3YjBkMTdmZjBkYWYzMTdkZWZlLnBuZw--/auto/auto/85/notrim/6e51084ac660f74319b2e88e12f913ce.webp',
@@ -228,7 +228,7 @@ const RARITY_LABEL = {
 
 const RARITY_ORDER = ['milspec','restricted','classified','covert','gold']
 const ITEM_W      = 120
-const POOL_SIZE   = 100 // Increased pool size to span ultra-wide screens
+const POOL_SIZE   = 100
 
 // ─── State ───────────────────────────────────────────────────────────────────
 const trackRef      = ref(null)
@@ -306,7 +306,6 @@ async function spin() {
   showWinner.value = false
 
   const winner = rollDrop()
-  // Push winner index deeper into the pool for a longer, dramatic fullscreen spin
   const winIdx = Math.floor(POOL_SIZE * 0.85) + Math.floor(Math.random() * 8)
 
   pool.value = Array.from({ length: POOL_SIZE }, (_, i) => {
@@ -359,6 +358,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', centerTrackInstantly)
 })
+
 </script>
 
 <style scoped>
@@ -370,7 +370,7 @@ onUnmounted(() => {
   font-family: 'Barlow', sans-serif;
   background: #080b12;
   color: #dde4f0;
-  position: fixed; /* Make it genuinely full screen */
+  position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
@@ -388,7 +388,7 @@ onUnmounted(() => {
 /* ── Common Sections Widths ── */
 .title-bar, .bottom-section {
   width: 100%;
-  max-width: 900px; /* Constrain text content so it isn't completely unreadable on ultrawides */
+  max-width: 900px;
   margin: 0 auto;
   padding: 0 2rem;
   z-index: 10;
@@ -516,7 +516,7 @@ onUnmounted(() => {
 
 /* ── Result ── */
 .result-placeholder {
-  min-height: 180px; /* Prevents layout jump when result appears */
+  min-height: 180px; 
   display: flex;
   justify-content: center;
   align-items: flex-start;

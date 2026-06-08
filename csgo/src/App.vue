@@ -1,23 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
 import CaseSpinner from './components/CaseSpinner.vue'
-  
-  const todos = ref([])
-
-  async function getTodos() {
-    const { data } = await supabase.from('todos').select()
-    todos.value = data
-  }
-
-  onMounted(() => {
-    getTodos()
-  })
+import AuthOverlay from './components/AuthOverlay.vue'
 
 </script>
 
 <template>
-  <ul>
-    <li v-for="todo in todos" :key="todo.id">{{ todo.name }}</li>
-  </ul>
   <CaseSpinner />
+  <AuthOverlay />
 </template>
