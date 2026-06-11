@@ -1,134 +1,81 @@
 <template>
   <div class="spinner-root">
-    <div class="bg-glow" />
-
     <div class="title-bar">
-      <img
-        class="case-img"
-        src="https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL3dlYXBvbl9jYXNlcy9jcmF0ZV9jb21tdW5pdHlfMjIuZjIyM2RkNDJjOGQ0YzNlY2Y1YTAzYjI3NDE2Y2I1MjNmNDkzZDhhZi5wbmc-/50/auto/85/notrim/da4e37795b893243fd73725bb8874820.png"
-        alt="Prisma Case"
-      />
+      <img src="https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL3dlYXBvbl9jYXNlcy9jcmF0ZV9jb21tdW5pdHlfMjIuZjIyM2RkNDJjOGQ0YzNlY2Y1YTAzYjI3NDE2Y2I1MjNmNDkzZDhhZi5wbmc-/50/auto/85/notrim/da4e37795b893243fd73725bb8874820.png" alt="Prisma Case" class="case-img" />
       <div>
         <h1>Prisma Case</h1>
-        <p class="subtitle">17 skins · 4 knife types · Released March 13, 2019</p>
+        <p>17 skins · 4 knife types · Released March 13, 2019</p>
       </div>
     </div>
 
     <div class="track-wrapper">
       <div class="track-container">
-        <div class="track-fade track-fade-left" />
-        <div class="track-fade track-fade-right" />
-        <div class="center-indicator">
-          <div class="indicator-arrow indicator-top" />
+        <div class="fade-left" />
+        <div class="fade-right" />
+        <div class="indicator">
+          <div class="indicator-top" />
           <div class="indicator-line" />
-          <div class="indicator-arrow indicator-bottom" />
+          <div class="indicator-bottom" />
         </div>
         <div ref="trackRef" class="track">
           <div
             v-for="(item, i) in pool"
             :key="i"
             class="item"
-            :class="[`bg-${item.rarity}`, { 'item-winner': i === winnerIndex && showWinner }]"
+            :class="{ 'item-winner': i === winnerIndex && showWinner }"
+            :style="{ borderTopColor: rarityColor(item.rarity) }"
           >
-            <div class="rarity-bar" :class="`rarity-${item.rarity}`" />
-            <div v-if="item.statTrak" class="st-badge">ST</div>
-            <img
-              class="item-img"
-              :src="item.img"
-              :alt="item.shortName"
-              loading="lazy"
-              @error="onImgError"
-            />
-            <div class="item-name" :class="`col-${item.rarity}`">{{ item.shortName }}</div>
+            <span v-if="item.statTrak" class="st-badge">ST</span>
+            <img :src="item.img" :alt="item.shortName" class="item-img" loading="lazy" @error="e => e.target.style.display='none'" />
+            <div class="item-name" :style="{ color: rarityColor(item.rarity) }">{{ item.shortName }}</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="bottom-section">
-      <div class="controls">
-        <button class="spin-btn" :disabled="spinning" @click="spin">
-          <span v-if="!spinning">Open Case  —  $2.49</span>
-          <span v-else class="btn-spinning">Opening<span class="dots" /></span>
-        </button>
+    <div class="bottom">
+      <button class="spin-btn" :disabled="spinning" @click="spin">
+        {{ spinning ? 'Opening...' : 'Open Case — $2.49' }}
+      </button>
 
-        <div class="stats">
-          <div class="stat">
-            <span class="stat-label">Opens</span>
-            <span class="stat-value">{{ opens }}</span>
-          </div>
-          <div class="stat-divider" />
-          <div class="stat">
-            <span class="stat-label">StatTrak™</span>
-            <span class="stat-value st-count">{{ statTrakCount }}</span>
-          </div>
-          <div class="stat-divider" />
-          <div class="stat">
-            <span class="stat-label">Best drop</span>
-            <span class="stat-value" :class="bestRarity ? `col-${bestRarity}` : ''">
-              {{ bestDrop || '—' }}
-            </span>
-          </div>
-          <div class="stat-divider" />
-          <div class="stat">
-            <span class="stat-label">Spent</span>
-            <span class="stat-value">${{ (opens * 2.49).toFixed(2) }}</span>
-          </div>
-        </div>
+      <div class="stats">
+        <span>Opens: <b>{{ opens }}</b></span>
+        <span>StatTrak™: <b>{{ statTrakCount }}</b></span>
+        <span>Best: <b :style="{ color: rarityColor(bestRarity) }">{{ bestDrop || '—' }}</b></span>
+        <span>Spent: <b>${{ (opens * 2.49).toFixed(2) }}</b></span>
       </div>
 
-      <div class="result-placeholder">
-        <Transition name="result-fade">
-          <div v-if="result" class="result-display" :class="{ 'result-gold': result.rarity === 'gold' }">
-            <div class="result-top">
-              <div class="result-rarity-badge" :class="`badge-${result.rarity}`">
-                {{ RARITY_LABEL[result.rarity] }}
-              </div>
-              <div v-if="result.statTrak" class="result-st-badge">StatTrak™</div>
-            </div>
-
-            <div class="result-skin-row">
-              <img class="result-img" :src="result.img" :alt="result.name" />
-              <div class="result-info">
-                <div class="result-name" :class="`col-${result.rarity}`">
-                  <span v-if="result.statTrak" class="st-prefix">StatTrak™ </span>{{ result.name }}
-                </div>
-                <div class="result-wear-row">
-                  <span class="result-wear" :class="`wear-col-${result.wear.tier}`">
-                    {{ result.wear.label }}
-                  </span>
-                  <span class="result-float">{{ result.wear.float }}</span>
-                </div>
-                <div class="wear-bar-wrap">
-                  <div class="wear-bar-track">
-                    <div class="wear-bar-needle" :style="{ left: (result.wear.floatRaw * 100).toFixed(2) + '%' }" />
-                  </div>
-                  <div class="wear-bar-labels">
-                    <span>FN</span><span>MW</span><span>FT</span><span>WW</span><span>BS</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div v-if="result" class="result">
+        <img :src="result.img" :alt="result.name" class="result-img" />
+        <div class="result-info">
+          <div class="result-name" :style="{ color: rarityColor(result.rarity) }">
+            <span v-if="result.statTrak" class="st-prefix">StatTrak™ </span>{{ result.name }}
           </div>
-        </Transition>
+          <div>{{ RARITY_LABEL[result.rarity] }}</div>
+          <div>{{ result.wear.label }} · {{ result.wear.float }}</div>
+          <div class="wear-bar-wrap">
+            <div class="wear-bar">
+              <div class="wear-needle" :style="{ left: (result.wear.floatRaw * 100).toFixed(2) + '%' }" />
+            </div>
+            <div class="wear-labels"><span>FN</span><span>MW</span><span>FT</span><span>WW</span><span>BS</span></div>
+          </div>
+        </div>
       </div>
 
       <div v-if="history.length" class="history">
         <div class="history-label">Recent drops</div>
         <div class="history-list">
-          <TransitionGroup name="history-item">
-            <div
-              v-for="drop in history.slice(0, 10)"
-              :key="drop.id"
-              class="history-chip"
-              :class="[`chip-${drop.rarity}`, { 'chip-st': drop.statTrak }]"
-            >
-              <img :src="drop.img" :alt="drop.shortName" class="chip-img" @error="onImgError" />
-              <span v-if="drop.statTrak" class="chip-st-dot">ST</span>
-              {{ drop.shortName }}
-              <span class="chip-wear" :class="`wear-col-${drop.wear.tier}`">{{ drop.wear.short }}</span>
-            </div>
-          </TransitionGroup>
+          <div
+            v-for="drop in history.slice(0, 10)"
+            :key="drop.id"
+            class="history-chip"
+            :style="{ borderColor: rarityColor(drop.rarity) }"
+          >
+            <img :src="drop.img" :alt="drop.shortName" class="chip-img" @error="e => e.target.style.display='none'" />
+            <span v-if="drop.statTrak" class="st-badge">ST</span>
+            <span :style="{ color: rarityColor(drop.rarity) }">{{ drop.shortName }}</span>
+            <span class="chip-wear">{{ drop.wear.short }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -138,38 +85,36 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import gsap from 'gsap'
+import { supabase, user } from '@/supabase'
 
+const RARITY_COLORS = {
+  milspec: '#4b69ff', restricted: '#8847ff', classified: '#d32ce6', covert: '#eb4b4b', gold: '#e4ae39',
+}
+function rarityColor(r) { return RARITY_COLORS[r] ?? '#666' }
 
 const IMG = {
-  // Covert
   'm4a4_emperor':       'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9tNGExX2dzX200YTRfZW1wZXJvcl9saWdodC44OWE1NjU0YTc2NTExMGFlNTY5N2U3YjBkMTdmZjBkYWYzMTdkZWZlLnBuZw--/auto/auto/85/notrim/6e51084ac660f74319b2e88e12f913ce.webp',
   'fiveseven_angrymob': 'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9maXZlc2V2ZW5fY3VfZml2ZV9zZXZlbl9hbmdyeV9saWdodC41OWU3YTM2NzUxNjM2N2I4ZGYyOTgyNWI1NzE2OWZkZjU0OTA5ODBiLnBuZw--/auto/auto/85/notrim/56c95654ed5d4c11757dff0cfdc879d0.webp',
-  // Classified
   'aug_momentum':       'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9hdWdfY3VfYXVnX21vbWVudHVtX2xpZ2h0LjE0MjA4ZWE0OGRiMjgxNDgyZTU4YjIyYzNlODM3NzU3N2JlNjkzYzEucG5n/auto/auto/85/notrim/55103e74ce3d734a74c43e8e7ccee996.webp',
   'xm1014_incinegator': 'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl94bTEwMTRfY3VfeG0xMDE0X2luY2luZXJhdG9yX2xpZ2h0LjAwYjFhMmU3NDE2Zjg5MmQ2ZTQ5ODFkZWZhOTk0OTQyYmFiY2Q3ZDcucG5n/auto/auto/85/notrim/32bdfc9b359c12228f48c9ae2ece21be.webp',
   'r8_skullcrusher':    'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9yZXZvbHZlcl9jdV9yZXZvbHZlcl9vcHByZXNzb3JfbGlnaHQuMDY0YWQ0ZjIxZjQyZTUxNGI3MDA2YzE0YWQzNmZlMjI1ZDJiNjY1My5wbmc-/auto/auto/85/notrim/424e0d31f363fd19fbea56b6d19521b3.webp',
-  // Restricted
   'awp_atheris':        'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9hd3BfY3VfYXdwX3ZpcGVyX2xpZ2h0LjEyZTJlOTA3Zjg4ZjU2MzNhMzEzMGVlMDY5ZDQxMDg3OWNmNWE2NmUucG5n/auto/auto/85/notrim/4dce1a042bb0f10ba8b305ed7037de2e.webp',
   'deagle_lightrail':   'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9kZWFnbGVfZ3NfZGVhZ2xlX2V4b19saWdodC44ZDlmZTg2N2NiMWU4NGYyZjRjMGE5OGUyNzI2MTE4YjMyZTU5MGQ1LnBuZw--/auto/auto/85/notrim/0deb275bf988abeb3e2e7afe244b44bb.webp',
   'ump45_moonrise':     'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl91bXA0NV9hYV91bXA0NV9tb29ucmlzZV9zdW5zZXRfbGlnaHQuM2I0ZWRiNmQxZmEyYmU4YzkxNTlhMzI0NWZhNGQ3OGRhMDJhMDk4Zi5wbmc-/auto/auto/85/notrim/e3c8fae4c33ef389f4c8af9e4ebfff9e.webp',
   'mp5sd_gauss':        'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9tcDVzZF9nc19tcDVzZF9hc3Ryb21hdGljX2xpZ2h0LjQ2MDdiNmE4YjUwMDQwMzMwNWFlZjRiNTZjOTk0NjNjN2ZmYzE1ZmMucG5n/auto/auto/85/notrim/0c79c8f6001e8592f536daf498c29cf9.webp',
   'tec9_bamboozle':     'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl90ZWM5X2N1X3RlYzlfYmFtYm9vX2xpZ2h0LmYxYjBjYzkyNWE2ZWM5YzNhNWQ4ZTk4MTQ2ZmVjZThhZDFjNTQ4ODYucG5n/auto/auto/85/notrim/e64dd8d6ac9ba8dc01607ddcec6eb0b6.webp',
-  // Mil-Spec
   'ak47_uncharted':     'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9hazQ3X2N1X2FrNDdfYXp0ZWNfbGlnaHQuMGY3MDNlYTllNGFkN2IwMmEwNTU5OGRjMGVjMGQyNjRjZDIzNGY2Ny5wbmc-/auto/auto/85/notrim/1a7c6be8159149e85c4ac678638c042b.webp',
   'p250_verdigris':     'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9wMjUwX2FxX3AyNTBfdmVyZGlncmlzX2xpZ2h0LmUzM2EwYWZmODU1ZWI5MjhmNDgyNGIzYWUzZDE4OWZhY2MzMzA5NjkucG5n/auto/auto/85/notrim/7240dd37ebbf44c0be941877005cb90e.webp',
   'mp7_mischief':       'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9tcDdfY3VfbXA3X3JhY2tldGVlcl9saWdodC4zMThjZmY2ZTFkMGQ5ZGZmOGQ4ZDBiYTc4MzI0ZmY2MTc5YWRiZDBkLnBuZw--/auto/auto/85/notrim/8f32fc0f0c92abee2e538508b048e6b7.webp',
   'p90_offworld':       'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9wOTBfY3VfcDkwX29mZndvcmxkX2xpZ2h0LjNjNTlkYTBhYzllNDg2ZjY5MjVmMDdhNTVjNDExMzcyMmNmNDYyMTAucG5n/auto/auto/85/notrim/10401708168f20fe5f9893d327f0aca4.webp',
   'mac10_whitefish':    'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9tYWMxMF9nc19tYWMxMF9maXNoX2JhaXRfbGlnaHQuMGIwNGEyMzA5YzBjZGMzMTQ4MDdhMWZiM2RmOWRhMGE4NDM2MWI3YS5wbmc-/auto/auto/85/notrim/5473ec62cb3e95f1b5fe9e306c94547e.webp',
-  'galilar_akoben':     'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9nYWxpbGFyX3NwX2dhbGlsX2Frb2Jlbl9saWdodC5jOGI2MzNkZGQ2MDlkNDUzODk4N2JhZDczY2U5MGE5ODQ4MDFmNWJlLnBuZw--/auto/auto/85/notrim/a18749df7de227a71a7f5cfb697b347e.webp', 
+  'galilar_akoben':     'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9nYWxpbGFyX3NwX2dhbGlsX2Frb2Jlbl9saWdodC5jOGI2MzNkZGQ2MDlkNDUzODk4N2JhZDczY2U5MGE5ODQ4MDFmNWJlLnBuZw--/auto/auto/85/notrim/a18749df7de227a71a7f5cfb697b347e.webp',
   'famas_crypsis':      'https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9mYW1hc19zcF9mYW1hc19naG9zdF9pbnNlY3RzX2xpZ2h0LjZmOTNmMTVjNDFiZmZlOTBhM2M3ODRhZWZiOThmMzdhY2ZmYTc5YTIucG5n/auto/auto/85/notrim/3eecddc4f169047b65643d10792244a2.webp',
-  // Knives
   'knife_navaja':       'https://cdn.csgoskins.gg/public/uih/weapons/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL3dlYXBvbnMvYmFzZV93ZWFwb25zL3dlYXBvbl9rbmlmZV9neXBzeV9qYWNra25pZmUuYTY4YzFiZjMxM2Q5MTdhM2ZhMDVjNGM4NzYxYmViODdiYTI4MzBiOC5wbmc-/50/auto/85/notrim/3df5596ed036887c96e022db8017d8fa.png',
   'knife_stiletto':     'https://cdn.csgoskins.gg/public/uih/weapons/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL3dlYXBvbnMvYmFzZV93ZWFwb25zL3dlYXBvbl9rbmlmZV9zdGlsZXR0by5jNGZiNzAwNGFkMjk5ZDZiZWZjN2M5NmFmNWE0MTE3NjcwNWUzMTJkLnBuZw--/50/auto/85/notrim/97867128054268a0143c1056ca60056d.png',
   'knife_ursus':        'https://cdn.csgoskins.gg/public/uih/weapons/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL3dlYXBvbnMvYmFzZV93ZWFwb25zL3dlYXBvbl9rbmlmZV91cnN1cy4yZjIxOGNkYmVlMTIxZjYxZWFkY2NlZjg5ZWUxN2ZjNDZmZDQyZWY2LnBuZw--/50/auto/85/notrim/eae1933f485a066c5d70ff67ff07bd91.png',
   'knife_talon':        'https://cdn.csgoskins.gg/public/uih/weapons/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL3dlYXBvbnMvYmFzZV93ZWFwb25zL3dlYXBvbl9rbmlmZV93aWRvd21ha2VyLjYxNzcwNDliZDg4OWQ4ZjZiNWU2NzE5ZTUxZmZjOWY5OTRlZGEwMWEucG5n/50/auto/85/notrim/11a1f1d1f34a44ea9c5b48e046131266.png',
 }
-
-function onImgError(e) { e.target.style.display = 'none' }
 
 const KNIFE_FINISHES = [
   'Doppler (Phase 1)', 'Doppler (Phase 2)', 'Doppler (Phase 3)', 'Doppler (Phase 4)',
@@ -186,51 +131,46 @@ const WEAR_TIERS = [
 ]
 
 function rollWear() {
-  const f    = Math.random()
+  const f = Math.random()
   const tier = WEAR_TIERS.find(t => f >= t.min && f < t.max) ?? WEAR_TIERS[4]
   return { tier: tier.tier, label: tier.label, short: tier.short, floatRaw: f, float: f.toFixed(10) }
 }
 
 const ITEMS = [
-  { name: 'M4A4 | The Emperor',       shortName: 'The Emperor',    img: IMG.m4a4_emperor,       rarity: 'covert',     weight: 0.32 },
-  { name: 'Five-SeveN | Angry Mob',   shortName: 'Angry Mob',      img: IMG.fiveseven_angrymob, rarity: 'covert',     weight: 0.32 },
-  { name: 'AUG | Momentum',           shortName: 'Momentum',       img: IMG.aug_momentum,       rarity: 'classified', weight: 1.067 },
-  { name: 'XM1014 | Incinegator',     shortName: 'Incinegator',    img: IMG.xm1014_incinegator, rarity: 'classified', weight: 1.067 },
-  { name: 'R8 Revolver | Skull Crusher', shortName: 'Skull Crusher', img: IMG.r8_skullcrusher, rarity: 'classified', weight: 1.066 },
-  { name: 'AWP | Atheris',            shortName: 'Atheris',        img: IMG.awp_atheris,        rarity: 'restricted', weight: 3.196 },
-  { name: 'Desert Eagle | Light Rail',shortName: 'Light Rail',     img: IMG.deagle_lightrail,   rarity: 'restricted', weight: 3.196 },
-  { name: 'UMP-45 | Moonrise',        shortName: 'Moonrise',       img: IMG.ump45_moonrise,     rarity: 'restricted', weight: 3.196 },
-  { name: 'MP5-SD | Gauss',           shortName: 'Gauss',          img: IMG.mp5sd_gauss,        rarity: 'restricted', weight: 3.196 },
-  { name: 'Tec-9 | Bamboozle',        shortName: 'Bamboozle',      img: IMG.tec9_bamboozle,     rarity: 'restricted', weight: 3.196 },
-  { name: 'AK-47 | Uncharted',        shortName: 'Uncharted',      img: IMG.ak47_uncharted,     rarity: 'milspec',    weight: 11.417 },
-  { name: 'P250 | Verdigris',         shortName: 'Verdigris',      img: IMG.p250_verdigris,     rarity: 'milspec',    weight: 11.417 },
-  { name: 'MP7 | Mischief',           shortName: 'Mischief',       img: IMG.mp7_mischief,       rarity: 'milspec',    weight: 11.417 },
-  { name: 'P90 | Off World',          shortName: 'Off World',      img: IMG.p90_offworld,       rarity: 'milspec',    weight: 11.417 },
-  { name: 'MAC-10 | Whitefish',       shortName: 'Whitefish',      img: IMG.mac10_whitefish,    rarity: 'milspec',    weight: 11.417 },
-  { name: 'Galil AR | Akoben',        shortName: 'Akoben',         img: IMG.galilar_akoben,     rarity: 'milspec',    weight: 11.416 },
-  { name: 'FAMAS | Crypsis',          shortName: 'Crypsis',        img: IMG.famas_crypsis,      rarity: 'milspec',    weight: 11.416 },
+  { key: 'm4a4_emperor',       name: 'M4A4 | The Emperor',          shortName: 'The Emperor',    img: IMG.m4a4_emperor,       rarity: 'covert',     weight: 0.32 },
+  { key: 'fiveseven_angrymob', name: 'Five-SeveN | Angry Mob',      shortName: 'Angry Mob',      img: IMG.fiveseven_angrymob, rarity: 'covert',     weight: 0.32 },
+  { key: 'aug_momentum',       name: 'AUG | Momentum',              shortName: 'Momentum',       img: IMG.aug_momentum,       rarity: 'classified', weight: 1.067 },
+  { key: 'xm1014_incinegator', name: 'XM1014 | Incinegator',        shortName: 'Incinegator',    img: IMG.xm1014_incinegator, rarity: 'classified', weight: 1.067 },
+  { key: 'r8_skullcrusher',    name: 'R8 Revolver | Skull Crusher', shortName: 'Skull Crusher',  img: IMG.r8_skullcrusher,    rarity: 'classified', weight: 1.066 },
+  { key: 'awp_atheris',        name: 'AWP | Atheris',               shortName: 'Atheris',        img: IMG.awp_atheris,        rarity: 'restricted', weight: 3.196 },
+  { key: 'deagle_lightrail',   name: 'Desert Eagle | Light Rail',   shortName: 'Light Rail',     img: IMG.deagle_lightrail,   rarity: 'restricted', weight: 3.196 },
+  { key: 'ump45_moonrise',     name: 'UMP-45 | Moonrise',           shortName: 'Moonrise',       img: IMG.ump45_moonrise,     rarity: 'restricted', weight: 3.196 },
+  { key: 'mp5sd_gauss',        name: 'MP5-SD | Gauss',              shortName: 'Gauss',          img: IMG.mp5sd_gauss,        rarity: 'restricted', weight: 3.196 },
+  { key: 'tec9_bamboozle',     name: 'Tec-9 | Bamboozle',          shortName: 'Bamboozle',      img: IMG.tec9_bamboozle,     rarity: 'restricted', weight: 3.196 },
+  { key: 'ak47_uncharted',     name: 'AK-47 | Uncharted',          shortName: 'Uncharted',      img: IMG.ak47_uncharted,     rarity: 'milspec',    weight: 11.417 },
+  { key: 'p250_verdigris',     name: 'P250 | Verdigris',           shortName: 'Verdigris',      img: IMG.p250_verdigris,     rarity: 'milspec',    weight: 11.417 },
+  { key: 'mp7_mischief',       name: 'MP7 | Mischief',             shortName: 'Mischief',       img: IMG.mp7_mischief,       rarity: 'milspec',    weight: 11.417 },
+  { key: 'p90_offworld',       name: 'P90 | Off World',            shortName: 'Off World',      img: IMG.p90_offworld,       rarity: 'milspec',    weight: 11.417 },
+  { key: 'mac10_whitefish',    name: 'MAC-10 | Whitefish',         shortName: 'Whitefish',      img: IMG.mac10_whitefish,    rarity: 'milspec',    weight: 11.417 },
+  { key: 'galilar_akoben',     name: 'Galil AR | Akoben',          shortName: 'Akoben',         img: IMG.galilar_akoben,     rarity: 'milspec',    weight: 11.416 },
+  { key: 'famas_crypsis',      name: 'FAMAS | Crypsis',            shortName: 'Crypsis',        img: IMG.famas_crypsis,      rarity: 'milspec',    weight: 11.416 },
 ]
 
 const KNIVES = [
-  { base: '★ Navaja Knife',   img: IMG.knife_navaja   },
-  { base: '★ Stiletto Knife', img: IMG.knife_stiletto },
-  { base: '★ Ursus Knife',    img: IMG.knife_ursus    },
-  { base: '★ Talon Knife',    img: IMG.knife_talon    },
+  { key: 'knife_navaja',   base: '★ Navaja Knife',   img: IMG.knife_navaja   },
+  { key: 'knife_stiletto', base: '★ Stiletto Knife', img: IMG.knife_stiletto },
+  { key: 'knife_ursus',    base: '★ Ursus Knife',    img: IMG.knife_ursus    },
+  { key: 'knife_talon',    base: '★ Talon Knife',    img: IMG.knife_talon    },
 ]
 
 const RARITY_LABEL = {
-  milspec:    'Mil-Spec Grade',
-  restricted: 'Restricted',
-  classified: 'Classified',
-  covert:     'Covert',
-  gold:       '★ Rare Special Item',
+  milspec: 'Mil-Spec Grade', restricted: 'Restricted', classified: 'Classified',
+  covert: 'Covert', gold: '★ Rare Special Item',
 }
+const RARITY_ORDER = ['milspec', 'restricted', 'classified', 'covert', 'gold']
+const ITEM_W = 120
+const POOL_SIZE = 100
 
-const RARITY_ORDER = ['milspec','restricted','classified','covert','gold']
-const ITEM_W      = 120
-const POOL_SIZE   = 100
-
-// ─── State ───────────────────────────────────────────────────────────────────
 const trackRef      = ref(null)
 const pool          = ref([])
 const winnerIndex   = ref(-1)
@@ -242,16 +182,14 @@ const bestDrop      = ref('')
 const bestRarity    = ref('')
 const statTrakCount = ref(0)
 const history       = ref([])
-let   historyId     = 0
+let historyId = 0
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-const getCenter = () => typeof window !== 'undefined' ? window.innerWidth / 2 : 500
+const getCenter = () => window.innerWidth / 2
 
 function weightedRandom() {
   const knifeWeight = 0.26
-  const skinTotal   = ITEMS.reduce((s, i) => s + i.weight, 0)
-  const grand       = skinTotal + knifeWeight
-  let r = Math.random() * grand
+  const total = ITEMS.reduce((s, i) => s + i.weight, 0) + knifeWeight
+  let r = Math.random() * total
   if (r < knifeWeight) return null
   r -= knifeWeight
   for (const item of ITEMS) { r -= item.weight; if (r <= 0) return item }
@@ -259,117 +197,97 @@ function weightedRandom() {
 }
 
 function rollKnife() {
-  const k       = KNIVES[Math.floor(Math.random() * KNIVES.length)]
-  const finish  = KNIFE_FINISHES[Math.floor(Math.random() * KNIFE_FINISHES.length)]
-  const wear    = rollWear()
-  const stTrack = Math.random() < 0.1
+  const k = KNIVES[Math.floor(Math.random() * KNIVES.length)]
+  const finish = KNIFE_FINISHES[Math.floor(Math.random() * KNIFE_FINISHES.length)]
   return {
-    name:       `${k.base} | ${finish}`,
+    key: k.key,
+    name: `${k.base} | ${finish}`,
     shortName: `${k.base.replace('★ ', '')} ${finish}`,
-    img:       k.img,
-    rarity:    'gold',
-    weight:    0.26,
-    wear,
-    statTrak:  stTrack,
-    canStatTrak: true,
+    img: k.img, rarity: 'gold', weight: 0.26,
+    wear: rollWear(), statTrak: Math.random() < 0.1,
   }
 }
 
 function rollDrop() {
   const base = weightedRandom()
-  if (base === null) return rollKnife()
-  const wear     = rollWear()
-  const statTrak = Math.random() < 0.1
-  return { ...base, wear, statTrak }
+  if (!base) return rollKnife()
+  return { ...base, wear: rollWear(), statTrak: Math.random() < 0.1 }
 }
 
-function updateBest(item) {
-  const wi = RARITY_ORDER.indexOf(item.rarity)
-  const bi = RARITY_ORDER.indexOf(bestRarity.value)
-  if (wi > bi) {
-    bestDrop.value   = item.shortName
-    bestRarity.value = item.rarity
-  }
-}
-
-function centerTrackInstantly() {
-  if (trackRef.value && !spinning.value) {
+function centerTrack() {
+  if (trackRef.value && !spinning.value)
     gsap.set(trackRef.value, { x: -(POOL_SIZE / 2 * ITEM_W - getCenter()) })
-  }
 }
 
-// ─── Spin ────────────────────────────────────────────────────────────────────
+async function saveRoll(winner) {
+  if (!user.value) return
+  const { data: skin } = await supabase.from('skins').select('id').eq('skin_key', winner.key).single()
+  if (!skin) return
+  const { error } = await supabase.from('inventory').insert({
+    user_id: user.value.id, skin_id: skin.id,
+    stat_trak: winner.statTrak ?? false,
+    wear_label: winner.wear.label, wear_tier: winner.wear.tier, float_val: winner.wear.floatRaw,
+  })
+  if (error) console.error('saveRoll error:', error.message)
+}
+
 async function spin() {
   if (spinning.value) return
-  spinning.value   = true
-  result.value     = null
+  spinning.value = true
+  result.value = null
   showWinner.value = false
 
   const winner = rollDrop()
   const winIdx = Math.floor(POOL_SIZE * 0.85) + Math.floor(Math.random() * 8)
 
-  pool.value = Array.from({ length: POOL_SIZE }, (_, i) => {
-    if (i === winIdx) return winner
-    const base = weightedRandom()
-    return base === null
-      ? rollKnife()
-      : { ...base, statTrak: Math.random() < 0.1, wear: rollWear() }
-  })
+  pool.value = Array.from({ length: POOL_SIZE }, (_, i) =>
+    i === winIdx ? winner : rollDrop()
+  )
   winnerIndex.value = winIdx
-  showWinner.value  = false
 
   await new Promise(r => setTimeout(r, 30))
+  gsap.set(trackRef.value, { x: 0 })
 
-  const el = trackRef.value
-  gsap.set(el, { x: 0 })
+  const targetX = -(winIdx * ITEM_W + ITEM_W / 2 - getCenter())
+  const overshoot = targetX + (Math.random() - 0.5) * ITEM_W * 0.5
 
-  const center    = getCenter()
-  const targetX   = -(winIdx * ITEM_W + ITEM_W / 2 - center)
-  const jitter    = (Math.random() - 0.5) * ITEM_W * 0.5
-  const overshoot = targetX + jitter
-
-  // Extended, more dramatic animation curve
   await gsap.timeline()
-    .to(el, { x: overshoot, duration: 6.5, ease: 'power4.out' })
-    .to(el, { x: targetX,   duration: 0.4, ease: 'back.out(2)' })
+    .to(trackRef.value, { x: overshoot, duration: 6.5, ease: 'power4.out' })
+    .to(trackRef.value, { x: targetX, duration: 0.4, ease: 'back.out(2)' })
 
   showWinner.value = true
-  result.value     = winner
+  result.value = winner
   opens.value++
   if (winner.statTrak) statTrakCount.value++
-  updateBest(winner)
+
+  const wi = RARITY_ORDER.indexOf(winner.rarity)
+  if (wi > RARITY_ORDER.indexOf(bestRarity.value)) {
+    bestDrop.value = winner.shortName
+    bestRarity.value = winner.rarity
+  }
 
   history.value.unshift({ ...winner, id: ++historyId })
   if (history.value.length > 12) history.value.pop()
 
   spinning.value = false
+  await saveRoll(winner)
 }
 
-// ─── Init ────────────────────────────────────────────────────────────────────
 onMounted(() => {
-  pool.value = Array.from({ length: POOL_SIZE }, () => {
-    const base = weightedRandom()
-    return base === null ? rollKnife() : { ...base, statTrak: false, wear: rollWear() }
-  })
-  centerTrackInstantly()
-  window.addEventListener('resize', centerTrackInstantly)
+  pool.value = Array.from({ length: POOL_SIZE }, () => rollDrop())
+  centerTrack()
+  window.addEventListener('resize', centerTrack)
 })
-
-onUnmounted(() => {
-  window.removeEventListener('resize', centerTrackInstantly)
-})
-
+onUnmounted(() => window.removeEventListener('resize', centerTrack))
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Barlow:wght@400;500&display=swap');
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .spinner-root {
-  font-family: 'Barlow', sans-serif;
-  background: #080b12;
-  color: #dde4f0;
+  font-family: sans-serif;
+  background: #0a0a0a;
+  color: #ccc;
   position: fixed;
   inset: 0;
   display: flex;
@@ -377,239 +295,120 @@ onUnmounted(() => {
   justify-content: center;
   overflow-x: hidden;
   overflow-y: auto;
+  font-size: 13px;
 }
 
-.bg-glow {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(200,168,75,0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-/* ── Common Sections Widths ── */
-.title-bar, .bottom-section {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  z-index: 10;
-}
-
-/* ── Title ── */
 .title-bar {
-  display: flex; align-items: center; justify-content: center; gap: 16px;
-  margin-bottom: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 2rem;
 }
-.case-img { width: 72px; height: 72px; object-fit: contain; }
-.title-bar h1 {
-  font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700;
-  letter-spacing: 4px; text-transform: uppercase; color: #e0c870;
-}
-.subtitle { font-size: 13px; letter-spacing: 1.5px; color: #4a5060; text-transform: uppercase; margin-top: 3px; }
+.case-img { width: 60px; height: 60px; object-fit: contain; }
+.title-bar h1 { font-size: 22px; color: #ddd; }
+.title-bar p { font-size: 12px; color: #555; margin-top: 2px; }
 
-/* ── Track (Full Screen Width) ── */
-.track-wrapper {
-  width: 100%;
-  margin: 2rem 0;
-}
-
+.track-wrapper { width: 100%; margin: 1.5rem 0; }
 .track-container {
-  position: relative; height: 140px; overflow: hidden;
-  border-top: 1px solid #1a1e2a; border-bottom: 1px solid #1a1e2a; background: #060810;
-  width: 100%;
+  position: relative;
+  height: 136px;
+  overflow: hidden;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+  background: #050505;
 }
-.track-fade { position: absolute; top: 0; bottom: 0; width: 250px; z-index: 3; pointer-events: none; }
-.track-fade-left  { left:  0; background: linear-gradient(to right, #080b12 0%, #060810 40%, transparent); }
-.track-fade-right { right: 0; background: linear-gradient(to left,  #080b12 0%, #060810 40%, transparent); }
 
-.center-indicator {
+.fade-left, .fade-right {
+  position: absolute; top: 0; bottom: 0; width: 200px; z-index: 3; pointer-events: none;
+}
+.fade-left  { left: 0;  background: linear-gradient(to right, #0a0a0a, transparent); }
+.fade-right { right: 0; background: linear-gradient(to left,  #0a0a0a, transparent); }
+
+.indicator {
   position: absolute; left: 50%; top: 0; bottom: 0;
   transform: translateX(-50%); z-index: 4;
   display: flex; flex-direction: column; align-items: center; pointer-events: none;
 }
-.indicator-line { flex: 1; width: 2px; background: #e8a020; box-shadow: 0 0 14px 3px rgba(232,160,32,0.6); }
-.indicator-arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; }
-.indicator-top    { border-top:    12px solid #e8a020; }
-.indicator-bottom { border-bottom: 12px solid #e8a020; }
+.indicator-line { flex: 1; width: 2px; background: #e8a020; }
+.indicator-top, .indicator-bottom { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; }
+.indicator-top    { border-top: 10px solid #e8a020; }
+.indicator-bottom { border-bottom: 10px solid #e8a020; }
 
 .track { display: flex; align-items: center; height: 100%; gap: 6px; padding: 0 6px; will-change: transform; }
 
-/* ── Track Items ── */
 .item {
-  flex-shrink: 0; width: 114px; height: 122px; border-radius: 5px;
+  flex-shrink: 0; width: 114px; height: 122px;
+  background: #111;
+  border: 1px solid #222;
+  border-top-width: 3px;
+  border-radius: 4px;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-  padding-bottom: 6px; position: relative; border: 1px solid transparent; transition: border-color 0.2s;
+  padding-bottom: 6px; position: relative;
 }
-.item-winner { border-color: #e8a020 !important; box-shadow: 0 0 16px rgba(232,160,32,0.4); transform: scale(1.02); transition: all 0.3s ease; z-index: 2; }
-
-.rarity-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 5px 5px 0 0; }
+.item-winner { border-color: #e8a020 !important; box-shadow: 0 0 12px rgba(232,160,32,0.3); }
 
 .st-badge {
-  position: absolute; top: 5px; right: 5px;
-  font-size: 8px; font-weight: 700; letter-spacing: 1px;
+  position: absolute; top: 4px; right: 4px;
+  font-size: 8px; font-weight: 700;
   background: rgba(207,106,50,0.2); color: #cf6a32;
-  border: 1px solid rgba(207,106,50,0.4); padding: 1px 4px; border-radius: 2px;
+  padding: 1px 3px; border-radius: 2px;
 }
 
-.item-img {
-  width: 86px; height: 64px; object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
-  margin-bottom: 2px;
+.item-img { width: 82px; height: 60px; object-fit: contain; margin-bottom: 4px; }
+.item-name { font-size: 9px; text-align: center; line-height: 1.2; max-width: 106px; padding: 0 4px; }
+
+.bottom {
+  width: 100%; max-width: 860px; margin: 0 auto; padding: 0 2rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1.2rem;
 }
-.item-name {
-  font-size: 9px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
-  text-align: center; line-height: 1.2; max-width: 108px; padding: 0 4px;
-}
-
-/* Rarity backgrounds */
-.bg-milspec    { background: #0c1228; }
-.bg-restricted { background: #110c22; }
-.bg-classified { background: #130c1e; }
-.bg-covert     { background: #1c0c0c; }
-.bg-gold       { background: #18140a; }
-
-/* Rarity bar colors */
-.rarity-milspec    { background: #4b69ff; }
-.rarity-restricted { background: #8847ff; }
-.rarity-classified { background: #d32ce6; }
-.rarity-covert     { background: #eb4b4b; }
-.rarity-gold       { background: linear-gradient(90deg, #e4ae39, #fff07a, #e4ae39); }
-
-/* Rarity text colors */
-.col-milspec    { color: #4b69ff; }
-.col-restricted { color: #8847ff; }
-.col-classified { color: #d32ce6; }
-.col-covert     { color: #eb4b4b; }
-.col-gold       { color: #e4ae39; }
-
-/* Wear text colors */
-.wear-col-fn { color: #4ade80; }
-.wear-col-mw { color: #86efac; }
-.wear-col-ft { color: #fbbf24; }
-.wear-col-ww { color: #f97316; }
-.wear-col-bs { color: #f87171; }
-
-/* ── Controls ── */
-.controls { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; margin-top: 1rem; }
 
 .spin-btn {
-  font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
-  background: linear-gradient(135deg, #b8942e 0%, #e8cc58 50%, #b8942e 100%);
-  color: #0a0c10; border: none; border-radius: 4px; padding: 15px 64px; cursor: pointer;
-  transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 16px rgba(200,168,75,0.25);
+  padding: 12px 56px;
+  font-size: 14px; font-weight: 600; letter-spacing: 1px;
+  background: #c8a84b; color: #0a0a0a;
+  border: none; border-radius: 4px; cursor: pointer;
 }
-.spin-btn:hover:not(:disabled)  { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(200,168,75,0.4); }
-.spin-btn:active:not(:disabled) { transform: scale(0.97); }
-.spin-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.spin-btn:hover:not(:disabled) { background: #d9bc6a; }
+.spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.btn-spinning { display: flex; align-items: center; gap: 2px; }
-.dots::after  { content: ''; animation: dotdot 1.2s infinite steps(4, end); }
-@keyframes dotdot { 0%{content:''} 33%{content:'.'} 66%{content:'..'} 100%{content:'...'} }
-
-/* Stats */
-.stats { display: flex; align-items: center; justify-content: center; gap: 2rem; width: 100%; flex-wrap: wrap; }
-.stat  { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 80px; }
-.stat-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #4a5060; }
-.stat-value { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #8090a8; }
-.st-count   { color: #cf6a32; }
-.stat-divider { width: 1px; height: 32px; background: #1a1e2a; }
-
-/* ── Result ── */
-.result-placeholder {
-  min-height: 180px; 
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  margin-top: 1.5rem;
+.stats {
+  display: flex; gap: 2rem; color: #555; font-size: 12px; flex-wrap: wrap; justify-content: center;
 }
+.stats b { color: #999; }
 
-.result-display {
-  width: 100%; max-width: 650px;
-  padding: 1.25rem 1.5rem; border-radius: 8px;
-  background: #0d101a; border: 1px solid #1a1e2a;
+
+.result {
+  display: flex; align-items: center; gap: 20px;
+  background: #111; border: 1px solid #222; border-radius: 6px;
+  padding: 1rem 1.4rem; width: 100%; max-width: 600px;
 }
-.result-gold { border-color: rgba(228,174,57,0.4); background: rgba(24,20,10,0.95); box-shadow: 0 10px 40px rgba(228,174,57,0.1); }
-
-.result-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-
-.result-rarity-badge {
-  font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-  padding: 4px 12px; border-radius: 3px;
-}
-.badge-milspec    { background: rgba(75,105,255,0.12);  color: #7080ff; }
-.badge-restricted { background: rgba(136,71,255,0.12);  color: #a070ff; }
-.badge-classified { background: rgba(211,44,230,0.12);  color: #e060f0; }
-.badge-covert     { background: rgba(235,75,75,0.14);   color: #f07070; }
-.badge-gold       { background: rgba(228,174,57,0.14);  color: #e4ae39; }
-
-.result-st-badge {
-  font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-  padding: 4px 12px; border-radius: 3px;
-  background: rgba(207,106,50,0.15); color: #cf6a32; border: 1px solid rgba(207,106,50,0.3);
-}
-
-.result-skin-row { display: flex; align-items: center; gap: 20px; }
-.result-img { width: 150px; height: 110px; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6)); flex-shrink: 0; }
-
-.result-info { flex: 1; }
-.result-name {
-  font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 1px; line-height: 1.2;
-}
+.result-img { width: 140px; height: 100px; object-fit: contain; flex-shrink: 0; }
+.result-info { display: flex; flex-direction: column; gap: 5px; }
+.result-name { font-size: 18px; font-weight: 600; }
 .st-prefix { color: #cf6a32; }
 
-.result-wear-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-.result-wear { font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
-.result-float { font-family: monospace; font-size: 12px; color: #4a5060; }
-
-/* Float bar */
-.wear-bar-wrap { margin-top: 10px; }
-.wear-bar-track {
-  position: relative; height: 6px; border-radius: 3px;
-  background: linear-gradient(to right, #4ade80 0%, #86efac 7%, #fbbf24 15%, #f97316 38%, #f87171 45%, #9e3030 100%);
+.wear-bar-wrap { margin-top: 6px; }
+.wear-bar {
+  position: relative; height: 5px; border-radius: 3px;
+  background: linear-gradient(to right, #4ade80 0%, #fbbf24 15%, #f97316 38%, #f87171 45%, #9e3030 100%);
 }
-.wear-bar-needle {
-  position: absolute; top: -4px; width: 2px; height: 14px;
+.wear-needle {
+  position: absolute; top: -4px; width: 2px; height: 13px;
   background: #fff; border-radius: 1px; transform: translateX(-50%);
-  box-shadow: 0 0 6px rgba(255,255,255,0.8); transition: left 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.wear-bar-labels {
-  display: flex; justify-content: space-between;
-  font-size: 10px; color: #4a5060; letter-spacing: 1px; text-transform: uppercase; margin-top: 5px;
-}
+.wear-labels { display: flex; justify-content: space-between; font-size: 10px; color: #444; margin-top: 3px; }
 
-/* ── History ── */
-.history { margin-top: 1rem; border-top: 1px solid #1a1e2a; padding-top: 1.5rem; text-align: center; }
-.history-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #4a5060; margin-bottom: 12px; }
-.history-list  { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+
+.history { width: 100%; border-top: 1px solid #1a1a1a; padding-top: 1rem; text-align: center; }
+.history-label { font-size: 11px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.history-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 
 .history-chip {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 600; letter-spacing: 0.4px;
-  padding: 5px 10px; border-radius: 4px; border: 1px solid transparent;
-  background: rgba(13, 16, 26, 0.6);
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; padding: 4px 8px;
+  background: #111; border: 1px solid #222; border-radius: 3px; color: #777;
 }
-.chip-milspec    { border-color: rgba(75,105,255,0.2);  color: #7080ff; }
-.chip-restricted { border-color: rgba(136,71,255,0.2);  color: #a070ff; }
-.chip-classified { border-color: rgba(211,44,230,0.2);  color: #e060f0; }
-.chip-covert     { border-color: rgba(235,75,75,0.25);  color: #f07070; }
-.chip-gold       { border-color: rgba(228,174,57,0.3);  color: #e4ae39; }
-.chip-st         { border-color: rgba(207,106,50,0.5) !important; }
-
-.chip-img { width: 32px; height: 24px; object-fit: contain; }
-.chip-st-dot {
-  font-size: 9px; font-weight: 700; color: #cf6a32;
-  background: rgba(207,106,50,0.15); padding: 1px 4px; border-radius: 2px;
-}
-.chip-wear { font-size: 10px; opacity: 0.65; margin-left: 2px; }
-
-/* ── Transitions ── */
-.result-fade-enter-active { transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.result-fade-leave-active { transition: opacity 0.2s; }
-.result-fade-enter-from   { opacity: 0; transform: translateY(20px) scale(0.95); }
-.result-fade-leave-to     { opacity: 0; }
-
-.history-item-enter-active { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.history-item-enter-from   { opacity: 0; transform: scale(0.7) translateY(-10px); }
-.history-item-leave-active { transition: all 0.3s ease; position: absolute; }
-.history-item-leave-to     { opacity: 0; transform: scale(0.8); }
+.chip-img { width: 28px; height: 20px; object-fit: contain; }
+.chip-wear { font-size: 10px; color: #444; }
 </style>
